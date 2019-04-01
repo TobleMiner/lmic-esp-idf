@@ -203,7 +203,7 @@ void hal_waitUntil (u4_t time) {
 
 // check and rewind for target time
 u1_t hal_checkTimer (u4_t time) {
-  return 1;
+  return delta_time(time) <= 0;
 }
 
 // -----------------------------------------------------------------------------
