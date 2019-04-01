@@ -28,6 +28,7 @@ extern const lmic_pinmap lmic_pins;
 // I/O
 
 static void hal_io_init () {
+    int i;
     ESP_LOGI(TAG, "Starting IO initialization");
 
     gpio_config_t io_conf;
@@ -39,7 +40,12 @@ static void hal_io_init () {
     gpio_config(&io_conf);
 
     io_conf.mode = GPIO_MODE_INPUT;
-    io_conf.pin_bit_mask = (1<<lmic_pins.dio[0]) | (1<<lmic_pins.dio[1]) | (1<<lmic_pins.dio[2]);
+    io_conf.pin_bit_mask = 0;
+	for(i = 0; i < NUM_DIO; i++) {
+		if(lmic_pins.dio[i] != LMIC_UNUSED_PIN) {
+			io_conf.pin_bit_mask |= (1ull << lmic_pins.dio[i]);
+		}
+	}
     gpio_config(&io_conf);
 
     ESP_LOGI(TAG, "Finished IO initialization");
