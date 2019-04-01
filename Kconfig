@@ -1,0 +1,51 @@
+menu "LMIC"
+
+choice LMIC_DEFAULT_FREQ_BAND
+	prompt "Default frequency band"
+
+	config LMIC_FREQ_USE_EU_868
+		bool "868 MHz EU"
+
+	config LMIC_FREQ_USE_US_915
+		bool "915 MHz US"
+
+endchoice
+
+choice LMIC_SX_CHIP
+	prompt "LoRa chip"
+
+	config LMIC_USE_SX1276
+		bool "SX1276"
+
+	config LMIC_USE_SX1272
+		bool "SX1272"
+
+endchoice
+
+config LMIC_DEBUG_LEVEL
+	int "LMIC debug level"
+	default 0
+
+	menu "Features"
+
+	config LMIC_FEATURE_JOIN
+		bool "Join"
+		help 
+			Enable code required for OTA activation
+		default y
+
+	config LMIC_FEATURE_PING
+		bool "Ping"
+		help 
+			Enable code required for pinging
+		default y
+
+	config LMIC_FEATURE_BEACONS
+		bool "Beacons"
+		help 
+			Enable code required for beacon tracking
+		default y
+
+	endmenu
+
+endmenu

@@ -1,18 +1,29 @@
 #ifndef _lmic_config_h_
 #define _lmic_config_h_
 
+#include "sdkconfig.h"
+
 // In the original LMIC code, these config values were defined on the
 // gcc commandline. Since Arduino does not allow easily modifying the
 // compiler commandline, use this file instead.
 
+#ifdef CONFIG_LMIC_FREQ_USE_EU_868
 #define CFG_eu868 1
-//#define CFG_us915 1
+#endif
+
+#ifdef CONFIG_LMIC_FREQ_USE_US_915
+#define CFG_us915 1
+#endif
 // This is the SX1272/SX1273 radio, which is also used on the HopeRF
 // RFM92 boards.
-//#define CFG_sx1272_radio 1
+#ifdef CONFIG_LMIC_USE_SX1272
+#define CFG_sx1272_radio 1
+#endif
 // This is the SX1276/SX1277/SX1278/SX1279 radio, which is also used on
 // the HopeRF RFM95 boards.
+#ifdef CONFIG_LMIC_USE_SX1276
 #define CFG_sx1276_radio 1
+#endif
 
 // 20 μs per tick
 // LMIC requires ticks to be 15.5μs - 100 μs long
@@ -23,25 +34,21 @@
 // enable more verbose output. Make sure that printf is actually
 // configured (e.g. on AVR it is not by default), otherwise using it can
 // cause crashing.
-#define LMIC_DEBUG_LEVEL 99
-
-// Enable this to allow using printf() to print to the given serial port
-// (or any other Print object). This can be easy for debugging. The
-// current implementation only works on AVR, though.
-//#define LMIC_PRINTF_TO Serial
-
-// Any runtime assertion failures are printed to this serial port (or
-// any other Print object). If this is unset, any failures just silently
-// halt execution.
-#define LMIC_FAILURE_TO Serial
+#define LMIC_DEBUG_LEVEL CONFIG_LMIC_DEBUG_LEVEL
 
 // Uncomment this to disable all code related to joining
-//#define DISABLE_JOIN
+#ifndef CONFIG_LMIC_FEATURE_JOIN
+#define DISABLE_JOIN
+#endif
 // Uncomment this to disable all code related to ping
-//#define DISABLE_PING
+#ifndef CONFIG_LMIC_FEATURE_PING
+#define DISABLE_PING
+#endif
 // Uncomment this to disable all code related to beacon tracking.
 // Requires ping to be disabled too
-//#define DISABLE_BEACONS
+#ifndef CONFIG_LMIC_FEATURE_BEACONS
+#define DISABLE_BEACONS
+#endif
 
 // Uncomment these to disable the corresponding MAC commands.
 // Class A
