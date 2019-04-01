@@ -1,4 +1,4 @@
-Arduino-LMIC library
+ESP-IDF LMIC library
 ====================
 This repository contains the IBM LMIC (LoraMAC-in-C) library, slightly
 modified to run in the ESP-IDF environment, allowing using the SX1272,
