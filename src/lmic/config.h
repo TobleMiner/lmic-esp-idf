@@ -25,7 +25,7 @@
 // enable more verbose output. Make sure that printf is actually
 // configured (e.g. on AVR it is not by default), otherwise using it can
 // cause crashing.
-#define LMIC_DEBUG_LEVEL 0
+#define LMIC_DEBUG_LEVEL 99
 
 // Enable this to allow using printf() to print to the given serial port
 // (or any other Print object). This can be easy for debugging. The
@@ -72,12 +72,12 @@
 // implementation is optimized for speed on 32-bit processors using
 // fairly big lookup tables, but it takes up big amounts of flash on the
 // AVR architecture.
-// #define USE_ORIGINAL_AES
+#define USE_ORIGINAL_AES
 //
 // This selects the AES implementation written by Ideetroon for their
 // own LoRaWAN library. It also uses lookup tables, but smaller
 // byte-oriented ones, making it use a lot less flash space (but it is
 // also about twice as slow as the original).
-#define USE_IDEETRON_AES
+// #define USE_IDEETRON_AES
 
 #endif // _lmic_config_h_

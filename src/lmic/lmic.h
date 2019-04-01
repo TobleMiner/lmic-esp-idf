@@ -18,6 +18,8 @@
 #include "oslmic.h"
 #include "lorabase.h"
 
+#include "../hal/hal.h"
+
 #ifdef __cplusplus
 extern "C"{
 #endif

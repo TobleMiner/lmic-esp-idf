@@ -2,7 +2,7 @@
 extern "C"{
 #endif
 
-#include "lmic/lmic.h"
+#include "../src/lmic/lmic.h"
 
 #ifdef __cplusplus
 }

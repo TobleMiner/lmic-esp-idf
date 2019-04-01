@@ -13,6 +13,9 @@
 
 #if defined(USE_ORIGINAL_AES)
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+
 #define AES_MICSUB 0x30 // internal use only
 
 static CONST_TABLE(u4_t, AES_RCON)[10] = {
@@ -366,5 +369,7 @@ u4_t os_aes (u1_t mode, xref2u1_t buf, u2_t len) {
         }
         return AESAUX[0];
 }
+
+#pragma GCC diagnostic pop
 
 #endif
