@@ -177,12 +177,7 @@ static void hal_time_init () {
 u4_t hal_ticks () {
   uint64_t val;
   timer_get_counter_value(TIMER_GROUP_0, TIMER_1, &val);
-  //ESP_LOGD(TAG, "Getting time ticks");
-  printf("Getting some ticks\n");
-  vTaskDelay(1 / portTICK_PERIOD_MS);
-  uint32_t t = (uint32_t) val;
-  //u4_t result = (u4_t) us2osticks(t);
-  return t;
+  return (u4_t)val;
 }
 
 // Returns the number of ticks until time. Negative values indicate that
