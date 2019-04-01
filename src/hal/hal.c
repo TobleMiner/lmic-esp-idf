@@ -159,7 +159,7 @@ static void hal_time_init () {
   config.alarm_en = 0;
   config.auto_reload = 0;
   config.counter_dir = TIMER_COUNT_UP;
-  config.divider = 120;
+  config.divider = 1600;
   config.intr_type = 0;
   config.counter_en = TIMER_PAUSE;
   /*Configure timer*/

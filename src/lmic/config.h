@@ -14,11 +14,9 @@
 // the HopeRF RFM95 boards.
 #define CFG_sx1276_radio 1
 
-// 16 μs per tick
+// 20 μs per tick
 // LMIC requires ticks to be 15.5μs - 100 μs long
-#define US_PER_OSTICK_EXPONENT 4
-#define US_PER_OSTICK (1 << US_PER_OSTICK_EXPONENT)
-#define OSTICKS_PER_SEC (1000000 / US_PER_OSTICK)
+#define OSTICKS_PER_SEC 50000
 
 // Set this to 1 to enable some basic debug output (using printf) about
 // RF settings used during transmission and reception. Set to 2 to
