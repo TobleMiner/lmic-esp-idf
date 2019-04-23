@@ -22,6 +22,17 @@ choice LMIC_SX_CHIP
 
 endchoice
 
+choice LMIC_SPI
+	prompt "SPI Host interface"
+
+	config LMIC_SPI_HSPI
+		bool "HSPI"
+
+	config LMIC_SPI_VSPI
+		bool "VSPI"
+
+endchoice
+
 config LMIC_DEBUG_LEVEL
 	int "LMIC debug level"
 	default 0

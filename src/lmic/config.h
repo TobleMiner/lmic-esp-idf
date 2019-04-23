@@ -29,6 +29,15 @@
 // LMIC requires ticks to be 15.5μs - 100 μs long
 #define OSTICKS_PER_SEC 50000
 
+// SPI interface used by LMIC
+#ifdef CONFIG_LMIC_SPI_HSPI
+#define LMIC_SPI HSPI_HOST
+#endif
+
+#ifdef CONFIG_LMIC_SPI_VSPI
+#define LMIC_SPI VSPI_HOST
+#endif
+
 // Set this to 1 to enable some basic debug output (using printf) about
 // RF settings used during transmission and reception. Set to 2 to
 // enable more verbose output. Make sure that printf is actually

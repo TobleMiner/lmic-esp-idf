@@ -124,10 +124,10 @@ static void hal_spi_init () {
         .queue_size = 7,
     };
 
-    ret = spi_bus_initialize(HSPI_HOST, &buscfg, 1);
+    ret = spi_bus_initialize(LMIC_SPI, &buscfg, 1);
     assert(ret == ESP_OK);
 
-    ret = spi_bus_add_device(HSPI_HOST, &devcfg, &spi_handle);
+    ret = spi_bus_add_device(LMIC_SPI, &devcfg, &spi_handle);
     assert(ret == ESP_OK);
 
     ESP_LOGI(TAG, "Finished SPI initialization");
