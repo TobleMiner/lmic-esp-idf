@@ -34,7 +34,9 @@ static void hal_io_init () {
     gpio_config_t io_conf;
     io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
     io_conf.mode = GPIO_MODE_OUTPUT;
-    io_conf.pin_bit_mask = (1<<lmic_pins.nss) | (1<<lmic_pins.rst);
+    io_conf.pin_bit_mask = 1<<lmic_pins.nss;
+    if(lmic_pins.rst != LMIC_UNUSED_PIN) 
+        io_conf.pin_bit_mask |= 1<<lmic_pins.rst;
     io_conf.pull_down_en = 0;
     io_conf.pull_up_en = 0;
     gpio_config(&io_conf);
