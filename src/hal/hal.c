@@ -9,15 +9,15 @@
  * Thi is the HAL to run LMIC on top of the ESP-IDF environment
  *******************************************************************************/
 
-#include "../include/lmic.h"
 #include "hal.h"
+#include "../include/lmic.h"
 
+#include "driver/gpio.h"
+#include "driver/gptimer.h"
+#include "driver/spi_master.h"
+#include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "driver/gpio.h"
-#include "driver/spi_master.h"
-#include "driver/timer.h"
-#include "esp_log.h"
 
 #define TAG "lmic"
 
@@ -27,61 +27,47 @@ extern const lmic_pinmap lmic_pins;
 // -----------------------------------------------------------------------------
 // I/O
 
-static void hal_io_init () {
+static void hal_io_init() {
     int i;
-    ESP_LOGI(TAG, "Starting IO initialization");
+    // ESP_LOGI(TAG, "Starting IO initialization");
 
-    gpio_config_t io_conf;
-    io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
-    io_conf.mode = GPIO_MODE_OUTPUT;
-    io_conf.pin_bit_mask = 1<<lmic_pins.nss;
-    if(lmic_pins.rst != LMIC_UNUSED_PIN) {
-        io_conf.pin_bit_mask |= 1<<lmic_pins.rst;
+    if (lmic_pins.rst != LMIC_UNUSED_PIN) {
+        gpio_set_direction(lmic_pins.rst, GPIO_MODE_OUTPUT);
+        gpio_set_intr_type(lmic_pins.rst, GPIO_INTR_DISABLE);
     }
-    io_conf.pull_down_en = 0;
-    io_conf.pull_up_en = 0;
-    gpio_config(&io_conf);
 
-    io_conf.mode = GPIO_MODE_INPUT;
-    io_conf.pin_bit_mask = 0;
-	for(i = 0; i < NUM_DIO; i++) {
-		if(lmic_pins.dio[i] != LMIC_UNUSED_PIN) {
-			io_conf.pin_bit_mask |= (1ull << lmic_pins.dio[i]);
-		}
-	}
-    gpio_config(&io_conf);
+    for (i = 0; i < NUM_DIO; i++) {
+        if (lmic_pins.dio[i] != LMIC_UNUSED_PIN) {
+            gpio_set_direction(lmic_pins.dio[i], GPIO_MODE_INPUT);
+            gpio_set_intr_type(lmic_pins.dio[i], GPIO_INTR_DISABLE);
+        }
+    }
 
-    ESP_LOGI(TAG, "Finished IO initialization");
+    gpio_set_direction(lmic_pins.nss, GPIO_MODE_OUTPUT);
+    gpio_set_intr_type(lmic_pins.nss, GPIO_INTR_DISABLE);
+
+    // ESP_LOGI(TAG, "Finished IO initialization");
 }
 
 // val == 1  => tx 1
-void hal_pin_rxtx (u1_t val) {
+void hal_pin_rxtx(u1_t val) {
     if (lmic_pins.rxtx != LMIC_UNUSED_PIN)
         gpio_set_level(lmic_pins.rxtx, val);
 }
 
 // set radio NSS pin to given value
-void hal_pin_nss (u1_t val) {
-  gpio_set_level(lmic_pins.nss, val);
-}
+void hal_pin_nss(u1_t val) { gpio_set_level(lmic_pins.nss, val); }
 
 // set radio RST pin to given value (or keep floating!)
-void hal_pin_rst (u1_t val) {
-    gpio_config_t io_conf;
-    io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
-    io_conf.pin_bit_mask = (1<<lmic_pins.rst);
-    io_conf.pull_down_en = 0;
-    io_conf.pull_up_en = 0;
-
+void hal_pin_rst(u1_t val) {
     if (lmic_pins.rst == LMIC_UNUSED_PIN)
         return;
 
-    if(val == 0 || val == 1) { // drive pin
-        io_conf.mode = GPIO_MODE_OUTPUT;
-        gpio_config(&io_conf);
+    if (val == 0 || val == 1) { // drive pin
+        gpio_set_direction(lmic_pins.rst, GPIO_MODE_OUTPUT);
+        gpio_set_level(lmic_pins.rst, val);
     } else { // keep pin floating
-        io_conf.mode = GPIO_MODE_INPUT;
-        gpio_config(&io_conf);
+        gpio_set_direction(lmic_pins.rst, GPIO_MODE_INPUT);
     }
 }
 
@@ -106,8 +92,8 @@ static void hal_io_check() {
 
 spi_device_handle_t spi_handle;
 
-static void hal_spi_init () {
-    ESP_LOGI(TAG, "Starting SPI initialization");
+static void hal_spi_init() {
+    // ESP_LOGI(TAG, "Starting SPI initialization");
     esp_err_t ret;
 
     // init master
@@ -119,7 +105,7 @@ static void hal_spi_init () {
         .quadhd_io_num = -1,
     };
 
-  // init device
+    // init device
     spi_device_interface_config_t devcfg = {
         .clock_speed_hz = 100000,
         .mode = 0,
@@ -133,11 +119,11 @@ static void hal_spi_init () {
     ret = spi_bus_add_device(LMIC_SPI, &devcfg, &spi_handle);
     assert(ret == ESP_OK);
 
-    ESP_LOGI(TAG, "Finished SPI initialization");
+    // ESP_LOGI(TAG, "Finished SPI initialization");
 }
 
 // perform SPI transaction with radio
-u1_t hal_spi (u1_t data) {
+u1_t hal_spi(u1_t data) {
     uint8_t rxData = 0;
     spi_transaction_t t;
     memset(&t, 0, sizeof(t));
@@ -148,108 +134,112 @@ u1_t hal_spi (u1_t data) {
     esp_err_t ret = spi_device_transmit(spi_handle, &t);
     assert(ret == ESP_OK);
 
-    return (u1_t) rxData;
+    return (u1_t)rxData;
+}
+
+static void hal_spi_check_irq() {
+    hal_pin_nss(0);
+    hal_spi(0x12); // RegIrqFlags
+    u1_t val = hal_spi(0x00);
+    hal_pin_nss(1);
+    if (val != 0) {
+        radio_irq_handler(0);
+    }
 }
 
 // -----------------------------------------------------------------------------
 // TIME
 
-static void hal_time_init () {
-  ESP_LOGI(TAG, "Starting initialisation of timer");
-  int timer_group = TIMER_GROUP_0;
-  int timer_idx = TIMER_1;
-  timer_config_t config;
-  config.alarm_en = 0;
-  config.auto_reload = 0;
-  config.counter_dir = TIMER_COUNT_UP;
-  config.divider = 1600;
-  config.intr_type = 0;
-  config.counter_en = TIMER_PAUSE;
-  /*Configure timer*/
-  timer_init(timer_group, timer_idx, &config);
-  /*Stop timer counter*/
-  timer_pause(timer_group, timer_idx);
-  /*Load counter value */
-  timer_set_counter_value(timer_group, timer_idx, 0x0);
-  /*Start timer counter*/
-  timer_start(timer_group, timer_idx);
+gptimer_handle_t gptimer;
 
-  ESP_LOGI(TAG, "Finished initalisation of timer");
+static void hal_time_init() {
+    // ESP_LOGI(TAG, "Starting initialisation of timer");
+
+    gptimer_config_t timer_config = {.clk_src = GPTIMER_CLK_SRC_DEFAULT,
+                                     .direction = GPTIMER_COUNT_UP,
+                                     .resolution_hz = OSTICKS_PER_SEC};
+    esp_err_t ret = gptimer_new_timer(&timer_config, &gptimer);
+    assert(ret == ESP_OK);
+    ret = gptimer_enable(gptimer);
+    assert(ret == ESP_OK);
+    ret = gptimer_start(gptimer);
+    assert(ret == ESP_OK);
+
+    // ESP_LOGI(TAG, "Finished initalisation of timer");
 }
 
-u4_t hal_ticks () {
-  uint64_t val;
-  timer_get_counter_value(TIMER_GROUP_0, TIMER_1, &val);
-  return (u4_t)val;
+u4_t hal_ticks() {
+    uint64_t val;
+    gptimer_get_raw_count(gptimer, &val);
+    return (u4_t)val;
 }
 
 // Returns the number of ticks until time. Negative values indicate that
 // time has already passed.
-static s4_t delta_time(u4_t time) {
-    return (s4_t)(time - hal_ticks());
-}
+static s4_t delta_time(u4_t time) { return (s4_t)(time - hal_ticks()); }
 
+void hal_waitUntil(u4_t time) {
 
-void hal_waitUntil (u4_t time) {
-
-    ESP_LOGI(TAG, "Wait until");
+    // ESP_LOGI(TAG, "Wait until");
     s4_t delta = delta_time(time);
 
-    while( delta > 2000){
+    while (delta > 2000) {
         vTaskDelay(1 / portTICK_PERIOD_MS);
         delta -= 1000;
-    } if(delta > 0){
+    }
+    if (delta > 0) {
         vTaskDelay(delta / portTICK_PERIOD_MS);
     }
-    ESP_LOGI(TAG, "Done waiting until");
+    // ESP_LOGI(TAG, "Done waiting until");
 }
 
 // check and rewind for target time
-u1_t hal_checkTimer (u4_t time) {
-  return delta_time(time) <= 0;
-}
+u1_t hal_checkTimer(u4_t time) { return delta_time(time) <= 0; }
 
 // -----------------------------------------------------------------------------
 // IRQ
 
 int x_irq_level = 0;
 
-void hal_disableIRQs () {
-  //ESP_LOGD(TAG, "Disabling interrupts");
-  if(x_irq_level < 1){
-      //taskDISABLE_INTERRUPTS();
-  }
-  x_irq_level++;
+void hal_disableIRQs() {
+    // ESP_LOGD(TAG, "Disabling interrupts");
+    if (x_irq_level < 1) {
+        // taskDISABLE_INTERRUPTS();
+    }
+    x_irq_level++;
 }
 
-void hal_enableIRQs () {
-  //ESP_LOGD(TAG, "Enable interrupts");
-  if(--x_irq_level == 0){
-      //taskENABLE_INTERRUPTS();
-      hal_io_check();
-  }
+void hal_enableIRQs() {
+    // ESP_LOGD(TAG, "Enable interrupts");
+    if (--x_irq_level == 0) {
+        // taskENABLE_INTERRUPTS();
+        if (lmic_pins.dio[0] != LMIC_UNUSED_PIN) {
+            hal_io_check();
+        } else {
+            hal_spi_check_irq();
+        }
+    }
 }
 
-void hal_sleep () {
-  // unused
+void hal_sleep() {
+    // unused
 }
 
 // -----------------------------------------------------------------------------
 
 #if defined(LMIC_PRINTF_TO)
-static int uart_putchar (char c, FILE *)
-{
-	putc(c);
-//	printf("%c", c);
-    return 0 ;
+static int uart_putchar(char c, FILE *) {
+    putc(c);
+    //	printf("%c", c);
+    return 0;
 }
 
 void hal_printf_init() {
-	// nop, init done
+    // nop, init done
 }
 #endif // defined(LMIC_PRINTF_TO)
 
-void hal_init() {
+void lmichal_init() {
     // configure radio I/O and interrupt handler
     hal_io_init();
     // configure radio SPI
@@ -260,8 +250,9 @@ void hal_init() {
 
 void hal_failed(const char *file, u2_t line) {
     // HALT...
-	ESP_LOGE(TAG, "LMIC HAL failed (%s:%u)", file, line);
+    ESP_LOGE(TAG, "LMIC HAL failed (%s:%u)", file, line);
     hal_disableIRQs();
     hal_sleep();
-    while(1);
+    while (1)
+        ;
 }
