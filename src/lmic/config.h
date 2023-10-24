@@ -61,12 +61,13 @@
 
 // Uncomment these to disable the corresponding MAC commands.
 // Class A
-//#define DISABLE_MCMD_DCAP_REQ // duty cycle cap
-//#define DISABLE_MCMD_DN2P_SET // 2nd DN window param
-//#define DISABLE_MCMD_SNCH_REQ // set new channel
+// #define DISABLE_MCMD_DCAP_REQ // duty cycle cap
+// #define DISABLE_MCMD_DN2P_SET // 2nd DN window param
+// #define DISABLE_MCMD_SNCH_REQ // set new channel
 // Class B
-//#define DISABLE_MCMD_PING_SET // set ping freq, automatically disabled by DISABLE_PING
-//#define DISABLE_MCMD_BCNI_ANS // next beacon start, automatical disabled by DISABLE_BEACON
+// #define DISABLE_MCMD_PING_SET // set ping freq, automatically disabled by
+// DISABLE_PING #define DISABLE_MCMD_BCNI_ANS // next beacon start, automatical
+// disabled by DISABLE_BEACON
 
 // In LoRaWAN, a gateway applies I/Q inversion on TX, and nodes do the
 // same on RX. This ensures that gateways can talk to nodes and vice
@@ -77,7 +78,7 @@
 // hear gateways). This should probably only be used when debugging
 // and/or when talking to the radio directly (e.g. like in the "raw"
 // example).
-//#define DISABLE_INVERT_IQ_ON_RX
+// #define DISABLE_INVERT_IQ_ON_RX
 
 // This allows choosing between multiple included AES implementations.
 // Make sure exactly one of these is uncommented.
